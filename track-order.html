@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#176344">
+  <title>Track Order | SmartDine</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="customer.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <style>
+    .track-wrap{max-width:900px;margin:34px auto;padding:0 18px 60px}
+    .track-hero{padding:30px;border-radius:22px;background:linear-gradient(135deg,#eaf6ee,#f7fbf8);border:1px solid #cfe6d6;margin-bottom:22px}
+    .track-hero h1{margin:8px 0;font-size:clamp(28px,5vw,40px)}
+    .track-hero p{color:#53665a;max-width:620px}
+    .track-form{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end;background:#fff;border:1px solid #e3eae5;border-radius:16px;padding:20px;box-shadow:0 8px 28px #173d2410}
+    .track-form label{display:grid;gap:7px;font-weight:650;font-size:13px}
+    .track-form input,.track-form select{width:100%;padding:13px;border:1px solid #d8e2db;border-radius:10px;font:inherit}
+    .track-results{display:grid;gap:15px;margin-top:20px}
+    .track-order{background:#fff;border:1px solid #e2e9e4;border-radius:16px;padding:19px;box-shadow:0 4px 16px #173d240a}
+    .track-order.status-preparing{background:#eaf7ee;border-color:#8bc99d}
+    .track-order.status-completed{background:#fff8d9;border-color:#e8cf69}
+    .track-order-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+    .track-order h2{margin:4px 0;font-size:20px}
+    .track-meta{color:#65756a;font-size:12px}
+    .track-items{margin:15px 0;padding:12px;background:#f5f8f6;border-radius:10px;display:grid;gap:8px}
+    .track-item{display:flex;justify-content:space-between;gap:12px;font-size:13px}
+    .track-total{display:flex;justify-content:space-between;font-weight:800;border-top:1px solid #dce5df;padding-top:12px}
+    .track-empty{background:#fff;border:1px dashed #cbd8ce;padding:24px;border-radius:14px;text-align:center;color:#647267}
+    .track-back{display:inline-block;margin-top:18px;color:#176344;font-weight:700;text-decoration:none}
+    @media(max-width:620px){.track-form{grid-template-columns:1fr}.track-hero{padding:22px}.track-order{padding:15px}}
+  </style>
+</head>
+<body class="customer-body">
+  <header class="customer-header">
+    <a class="customer-brand" href="customer.html"><span class="logo-fallback">🍴</span><span id="restaurantName">SmartDine</span></a>
+    <nav class="customer-nav"><a class="nav-button" href="customer.html">Home / Menu</a><a class="nav-button" href="customer.html">My Order</a><a class="nav-button active" href="track-order.html">Track Order</a></nav>
+  </header>
+  <main class="track-wrap">
+    <section class="track-hero">
+      <span class="eyebrow">ORDER HISTORY & LIVE STATUS</span>
+      <h1>Track Your Order</h1>
+      <p>Find your previous orders using the phone number you provided when ordering, or enter the receipt number printed on your bill.</p>
+    </section>
+    <form id="trackForm" class="track-form">
+      <label>Search by
+        <select id="searchType"><option value="phone">Phone number</option><option value="receipt">Receipt / order number</option></select>
+      </label>
+      <label>Phone number or receipt number
+        <input id="searchValue" required autocomplete="off" placeholder="Enter your phone number">
+      </label>
+      <button class="btn primary" id="searchButton" type="submit">Find orders</button>
+    </form>
+    <p id="trackMessage" class="message" role="status" aria-live="polite"></p>
+    <section id="trackResults" class="track-results" aria-live="polite"></section>
+    <a class="track-back" href="customer.html">← Back to restaurant menu</a>
+  </main>
+  <script>
+    (()=>{
+      const {createClient}=supabase;
+      const configured=window.SUPABASE_URL&&window.SUPABASE_ANON_KEY&&!window.SUPABASE_URL.includes('YOUR_')&&!window.SUPABASE_ANON_KEY.includes('YOUR_');
+      const client=configured?createClient(window.SUPABASE_URL,window.SUPABASE_ANON_KEY):null;
+      const $=id=>document.getElementById(id);
+      const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      const money=value=>'Nu. '+Number(value||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+      const dateText=value=>new Date(value).toLocaleString('en-BT',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      if(!client){$('trackMessage').textContent='Please configure the Supabase URL and public anon key in js/config.js.';return;}
+      client.from('restaurant_settings').select('restaurant_name').limit(1).maybeSingle().then(({data})=>{if(data?.restaurant_name)$('restaurantName').textContent=data.restaurant_name;});
+      $('searchType').addEventListener('change',()=>{$('searchValue').placeholder=$('searchType').value==='phone'?'Enter the phone number used when ordering':'Enter receipt number, e.g. QB-1234ABCD';$('searchValue').value='';$('searchValue').focus();});
+      async function searchOrders(value,type){
+        $('trackMessage').textContent='Searching orders…';$('trackResults').innerHTML='';$('searchButton').disabled=true;
+        try{
+          let query=client.from('food_orders').select('id,order_number,customer_name,customer_phone,total_amount,status,created_at').order('created_at',{ascending:false}).limit(100);
+          query=type==='phone'?query.eq('customer_phone',value):query.ilike('order_number',value);
+          const {data,error}=await query;if(error)throw error;
+          const found=data||[];
+          if(!found.length){$('trackMessage').textContent='';$('trackResults').innerHTML='<div class="track-empty">No orders found. Check the phone number or receipt number and try again.</div>';return;}
+          $('trackMessage').textContent=`Found ${found.length} order${found.length===1?'':'s'}.`;
+          const cards=await Promise.all(found.map(async order=>{
+            const {data:lines,error:lineError}=await client.from('food_order_items').select('item_name,quantity,unit_price,line_total').eq('order_id',order.id);
+            if(lineError)throw lineError;
+            const items=lines||[];
+            return `<article class="track-order status-${esc(order.status)}"><div class="track-order-head"><div><span class="eyebrow">RECEIPT NUMBER</span><h2>${esc(order.order_number||String(order.id).slice(0,8))}</h2><div class="track-meta">${dateText(order.created_at)} · ${esc(order.customer_name||'Customer')}</div></div><span class="status ${esc(order.status)}">${esc(order.status)}</span></div><div class="track-items">${items.map(item=>`<div class="track-item"><span>${esc(item.item_name)} × ${Number(item.quantity)}</span><strong>${money(item.line_total)}</strong></div>`).join('')||'<span class="track-meta">Order item details unavailable.</span>'}<div class="track-total"><span>Order total</span><span>${money(order.total_amount)}</span></div></div><div class="track-meta">Status reflects the latest update from the restaurant.</div></article>`;
+          }));
+          $('trackResults').innerHTML=cards.join('');
+        }catch(error){$('trackMessage').textContent='Unable to search orders: '+error.message;}
+        finally{$('searchButton').disabled=false;}
+      }
+      $('trackForm').addEventListener('submit',event=>{event.preventDefault();const value=$('searchValue').value.trim();if(!value)return;searchOrders(value,$('searchType').value);});
+      const params=new URLSearchParams(location.search);const receipt=params.get('receipt');if(receipt){$('searchType').value='receipt';$('searchValue').value=receipt;$('searchType').dispatchEvent(new Event('change'));$('searchType').value='receipt';$('searchValue').value=receipt;searchOrders(receipt,'receipt');}
+    })();
+  </script>
+</body>
+</html>

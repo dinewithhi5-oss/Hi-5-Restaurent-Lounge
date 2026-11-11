@@ -1,0 +1,53 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Restaurant | Order Online</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="customer.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/config.js"></script><script defer src="js/customer.js"></script></head><body class="customer-body"><header class="customer-header"><a class="customer-brand" href="customer.html"><span id="headerLogoFallback" class="logo-fallback">🍴</span><img id="restaurantLogo" class="brand-logo hidden" alt="Restaurant logo"><span id="restaurantName">Loading…</span></a><nav class="customer-nav" aria-label="Customer pages">
+<button class="nav-button active" data-view="home">Home</button>
+<button class="nav-button" data-view="orders">My Order</button>
+
+<button class="nav-button info-button" type="button" data-info="about">About Us</button>
+<button class="nav-button info-button" type="button" data-info="howto">How to Use</button>
+</nav></header><main class="customer-main"><section id="homeView" class="customer-view"><span id="tableLabel" class="hidden"></span><div id="categoryBar" class="category-bar"></div><div class="section-heading"><h2 id="menuHeading">All items</h2><input id="foodSearch" placeholder="Search food…" aria-label="Search food"></div><section id="foodGrid" class="food-grid"><p>Loading menu…</p></section></section><section id="ordersView" class="customer-view hidden">
+<div class="orders-page-heading"><span class="orders-page-icon">📦</span><h1>My Order</h1></div>
+<section class="track-bill-panel record-panel"><div class="track-bill-title"><strong>My Order</strong><span>Check your order status and items.</span></div><form id="ordersLookup" class="lookup-form"><label class="sr-only" for="ordersPhone">Phone number</label><input id="ordersPhone" required type="tel" inputmode="tel" autocomplete="tel" placeholder="Enter phone number"><button class="btn primary" type="submit">Track Order</button></form><p id="ordersMessage" class="message" role="status" aria-live="polite"></p><div id="ordersResults" class="record-results"></div></section>
+<section class="track-bill-panel record-panel bill-panel"><div class="track-bill-title"><strong>My Bill</strong><span>View and print your receipts.</span></div><form id="billLookup" class="lookup-form"><label class="sr-only" for="billPhone">Phone number</label><input id="billPhone" required type="tel" inputmode="tel" autocomplete="tel" placeholder="Enter phone number"><button class="btn primary" type="submit">Find Bill</button></form><p id="billMessage" class="message" role="status" aria-live="polite"></p><div id="billResults" class="record-results"></div></section>
+</section></main>
+<div id="infoModal" class="customer-modal hidden" role="dialog" aria-modal="true" aria-labelledby="infoModalTitle">
+  <div class="customer-modal-backdrop" data-close-info></div>
+  <div class="customer-modal-card">
+    <button class="modal-close" type="button" aria-label="Close" data-close-info>×</button>
+    <span class="modal-icon" id="infoModalIcon">🍴</span>
+    <p class="eyebrow" id="infoModalEyebrow">RESTAURANT</p>
+    <h2 id="infoModalTitle">About Us</h2>
+    <div id="infoModalBody"></div>
+  </div>
+</div>
+<div id="orderReviewModal" class="customer-modal hidden" role="dialog" aria-modal="true" aria-labelledby="orderReviewTitle">
+  <div class="customer-modal-backdrop" data-close-review></div>
+  <div class="customer-modal-card order-review-card">
+    <button class="modal-close" type="button" aria-label="Close" data-close-review>×</button>
+    <span class="modal-icon">🛒</span>
+    <p class="eyebrow">YOUR ORDER</p>
+    <h2 id="orderReviewTitle">Review your order</h2>
+    <div id="reviewCartItems" class="review-cart-items"></div>
+    <div class="review-total"><span>Total</span><strong id="reviewCartTotal">Nu. 0.00</strong></div>
+    <button class="btn secondary full add-another-btn" type="button" id="addAnotherItemBtn">＋ Add another item</button>
+    <form id="checkoutForm" class="review-checkout-form">
+      <label>Your name<input id="customerName" required maxlength="80" placeholder="Name used for order"></label>
+      <label>Phone number<input id="customerPhone" required maxlength="30" type="tel" placeholder="Phone number for tracking"></label>
+      <button class="btn primary full" type="submit" id="confirmPlaceOrderBtn">Confirm order</button>
+      <p id="orderMessage" class="message"></p>
+    </form>
+  </div>
+</div>
+<div id="orderConfirmModal" class="customer-modal hidden" role="dialog" aria-modal="true" aria-labelledby="orderConfirmTitle">
+  <div class="customer-modal-backdrop" data-close-order-confirm></div>
+  <div class="customer-modal-card order-confirm-card">
+    <span class="modal-icon">🍔</span>
+    <p class="eyebrow">ONE LAST STEP</p>
+    <h2 id="orderConfirmTitle">Ready to order?</h2>
+    <p class="modal-text">Your delicious meal is just one click away!</p>
+    <div class="order-confirm-actions">
+      <button class="btn primary" type="button" id="yesPlaceOrderBtn">Yes, Place My Order</button>
+      <button class="btn secondary" type="button" id="noPlaceOrderBtn">No, Go Back</button>
+    </div>
+  </div>
+</div>
+</body></html>
