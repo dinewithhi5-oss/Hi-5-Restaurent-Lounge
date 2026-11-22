@@ -1,0 +1,14 @@
+QUICKBITE UPDATE
+
+Weekly completed-order cleanup:
+- The Order History page now has a "Delete last week’s data" button directly below the "Delete last month’s data" button.
+- Last week means the previous complete Monday-to-Sunday calendar week in Bhutan time (Asia/Thimphu).
+- Orders from the current week are never included.
+- Deleting an order also deletes its order line items (via the existing ON DELETE CASCADE relationship). Since customer order tracking and receipt pages read from food_orders, deleted orders and receipts will no longer appear there.
+- Historical report totals and dates are preserved in food_order_report_archive.
+
+DATABASE STEP:
+Run supabase/weekly_completed_order_cleanup.sql in Supabase SQL Editor after the main schema and report archive setup. This replaces the old rolling-seven-day cleanup function with the previous-full-week cleanup function.
+
+VOICE NOTE:
+The announcement uses the browser's built-in speech synthesis and the existing Enable sound setting. The admin dashboard must be open, sound must be enabled, and the browser/device must permit speech audio. Voice availability/language may depend on the device.
